@@ -10,7 +10,7 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
-const {errorMiddleware} = require('./middleware/error.middleware');
+const { errorMiddleware } = require('./middleware/error.middleware');
 
 // Initialize database and models FIRST
 const { initializeDatabase } = require('./config/database');
@@ -153,7 +153,11 @@ process.on('uncaughtException', (error) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    logger.error('Unhandled Rejection at promise:', {
+        promise,
+        reason: reason instanceof Error ? { message: reason.message, stack: reason.stack } : reason
+    });
+
     process.exit(1);
 });
 
