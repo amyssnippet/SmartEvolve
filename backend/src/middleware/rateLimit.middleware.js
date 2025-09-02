@@ -1,8 +1,7 @@
-const rateLimit = require("express-rate-limit");
-const { getRedisClient } = require("../config/redis");
-const logger = require("../utils/logger");
+const rateLimit = require('express-rate-limit');
+const { getRedisClient } = require('../config/redis');
+const logger = require('../utils/logger');
 
-// Create a Redis store for rate limiting
 class RedisStore {
   constructor(redisClient) {
     this.client = redisClient;
@@ -10,77 +9,65 @@ class RedisStore {
 
   async increment(key) {
     try {
-      const current = await this.client.incr(key);
+      const client = getRedisClient();
+      if (!client) throw new Error('Redis client not initialized');
+
+      const current = await client.incr(key);
       if (current === 1) {
-        await this.client.expire(key, 900); // 15 minutes
+        await client.expire(key, 900);
       }
-      return {
-        totalHits: current,
-        resetTime: new Date(Date.now() + 900000),
-      };
+      return { totalHits: current, resetTime: new Date(Date.now() + 900000) };
     } catch (error) {
-      logger.error("Redis rate limit error:", error);
+      logger.error('Redis rate limit error:', error);
       return { totalHits: 1, resetTime: new Date(Date.now() + 900000) };
     }
   }
 
   async decrement(key) {
     try {
-      await this.client.decr(key);
+      const client = getRedisClient();
+      if (client) await client.decr(key);
     } catch (error) {
-      logger.error("Redis rate limit decrement error:", error);
+      logger.error('Redis rate limit decrement error:', error);
     }
   }
 
   async resetKey(key) {
     try {
-      await this.client.del(key);
+      const client = getRedisClient();
+      if (client) await client.del(key);
     } catch (error) {
-      logger.error("Redis rate limit reset error:", error);
+      logger.error('Redis rate limit reset error:', error);
     }
   }
 }
 
-// Factory to create a limiter AFTER Redis is initialized
 const createRateLimit = (options = {}) => {
-  let client;
-  try {
-    client = getRedisClient(); // <-- now runs only when function is called
-  } catch (err) {
-    logger.error("Redis not ready for rate limiter:", err);
-    throw err;
+  const client = getRedisClient();
+  if (!client) {
+    logger.error('Redis not ready for rate limiter: Redis client not initialized');
+    // fallback: use in-memory store
+    return rateLimit({ ...options });
   }
 
-  const defaultOptions = {
-    windowMs: 15 * 60 * 1000, // 15 minutes
+  return rateLimit({
+    windowMs: 15 * 60 * 1000,
     max: 100,
-    message: {
-      error: "Too many requests",
-      message: "Rate limit exceeded. Please try again later.",
-    },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => {
-      return req.user ? `user:${req.user.id}` : `ip:${req.ip}`;
-    },
     store: new RedisStore(client),
-  };
-
-  return rateLimit({ ...defaultOptions, ...options });
+    ...options,
+  });
 };
 
 const rateLimits = {
-  auth: rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10,}),
-    strict: rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,}),
-  standard: createRateLimit({ max: 100 }),
-  generous: createRateLimit({ max: 300 }),
-}
-
-module.exports = {
-  createRateLimit,
-  rateLimits,
+  general: createRateLimit({ max: 1000 }),
+  auth: createRateLimit({ max: 10 }),
+  upload: createRateLimit({ max: 50, windowMs: 60 * 60 * 1000 }),
+  training: createRateLimit({ max: 20, windowMs: 60 * 60 * 1000 }),
+  vast: createRateLimit({ max: 100, windowMs: 60 * 60 * 1000 }),
+  payment: createRateLimit({ max: 10, windowMs: 60 * 60 * 1000 }),
+  strict: createRateLimit({ max: 5 }),
 };
+
+module.exports = { rateLimits, createRateLimit };
