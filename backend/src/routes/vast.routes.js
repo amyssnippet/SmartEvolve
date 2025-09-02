@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/search', 
-  rateLimits.vast,
+  // rateLimits.vast,
   vastController.searchInstances
 );
 
@@ -19,7 +19,7 @@ router.get('/instances',
 );
 
 router.post('/instances', 
-  rateLimits.vast,
+  // rateLimits.vast,
   vastController.createInstance
 );
 
@@ -29,7 +29,7 @@ router.get('/instances/:id',
 );
 
 router.delete('/instances/:id', 
-  rateLimits.vast,
+  // rateLimits.vast,
   uuidParam('id'),
   vastController.terminateInstance
 );
@@ -40,7 +40,7 @@ router.get('/instances/:id/metrics',
 );
 
 router.get('/pricing-estimate', 
-  rateLimits.vast,
+  // rateLimits.vast,
   vastController.getPricingEstimate
 );
 

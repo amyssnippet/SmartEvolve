@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Webhook endpoint (no auth required)
 router.post('/webhook', 
-  rateLimits.payment,
+  // rateLimits.payment,
   billingController.webhook
 );
 
@@ -25,13 +25,13 @@ router.get('/transactions',
 );
 
 router.post('/create-order', 
-  rateLimits.payment,
+  // rateLimits.payment,
   billingValidation.createPayment,
   billingController.createPaymentOrder
 );
 
 router.post('/verify-payment', 
-  rateLimits.payment,
+  // rateLimits.payment,
   billingController.verifyPayment
 );
 
@@ -40,7 +40,7 @@ router.get('/token-balance',
 );
 
 router.post('/purchase-tokens', 
-  rateLimits.payment,
+  // rateLimits.payment,
   billingController.purchaseTokens
 );
 

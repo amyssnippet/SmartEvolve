@@ -63,7 +63,7 @@ router.get('/files/:fileId/download',
 
 router.delete('/files/:fileId', 
   authMiddleware,
-  rateLimits.strict,
+  // rateLimits.strict,
   uuidParam('fileId'),
   storageController.deleteFile
 );
@@ -91,7 +91,7 @@ router.get('/models',
 // Archive creation
 router.post('/archive', 
   authMiddleware,
-  rateLimits.general,
+  // // rateLimits.general,
   storageController.createArchive
 );
 
