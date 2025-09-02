@@ -6,8 +6,7 @@ let redisClient;
 const initializeRedis = async () => {
   try {
     redisClient = redis.createClient({
-      url: 'redis://127.0.0.1:6379',
-      password: 'foobared',
+      url: 'redis://default:foobared@127.0.0.1:6379',
     });
 
     redisClient.on('error', (err) => {
