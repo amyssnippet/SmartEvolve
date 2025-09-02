@@ -10,7 +10,7 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
-const errorMiddleware = require('./middleware/error.middleware');
+const {errorMiddleware} = require('./middleware/error.middleware');
 
 // Initialize database and models FIRST
 const { initializeDatabase } = require('./config/database');
