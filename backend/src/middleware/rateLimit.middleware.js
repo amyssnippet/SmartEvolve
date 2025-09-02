@@ -51,7 +51,7 @@ const createRateLimit = (options = {}) => {
     throw err;
   }
 
-  const rateLimits = {
+  const defaultOptions = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100,
     message: {
@@ -67,4 +67,20 @@ const createRateLimit = (options = {}) => {
   };
 
   return rateLimit({ ...defaultOptions, ...options });
+};
+
+const rateLimits = {
+  auth: rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10,}),
+    strict: rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,}),
+  standard: createRateLimit({ max: 100 }),
+  generous: createRateLimit({ max: 300 }),
+}
+
+module.exports = {
+  createRateLimit,
+  rateLimits,
 };
