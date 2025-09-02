@@ -8,7 +8,7 @@ const initializeDatabase = async () => {
     // ✅ Direct connection without env vars
     sequelize = new Sequelize(
       'smartevolve',        // database name
-      'postgres',      // username
+      'postgres_se',      // username
       '1234',  // password
       {
         host: 'localhost',  // or your DB host/IP
