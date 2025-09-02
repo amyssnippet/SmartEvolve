@@ -6,12 +6,7 @@ let redisClient;
 const initializeRedis = async () => {
   try {
     redisClient = redis.createClient({
-      url: process.env.REDIS_URL,
-      password: process.env.REDIS_PASSWORD || undefined,
-      retry_unfulfilled_commands: true,
-      retry_delay_on_cluster_down: 300,
-      retry_delay_on_failover: 100,
-      max_attempts: 3
+      url: 'redis://127.0.0.1:6379',
     });
 
     redisClient.on('error', (err) => {
@@ -27,10 +22,10 @@ const initializeRedis = async () => {
     });
 
     await redisClient.connect();
-    
+
     // Test connection
     await redisClient.ping();
-    
+
     return redisClient;
   } catch (error) {
     logger.error('Failed to connect to Redis:', error);
