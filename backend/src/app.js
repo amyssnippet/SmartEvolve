@@ -71,9 +71,11 @@ async function initialize() {
         app.use('/api/billing', billingRoutes);
 
         // Health check
-        app.get('/health', (req, res) => {
+        app.get('/', (req, res) => {
             res.json({
+                project: '☁︎ Cloudlin Backend',
                 status: 'healthy',
+                description: 'Training and Deploying AI models in the cloud made easy.',
                 timestamp: new Date().toISOString(),
                 version: process.env.npm_package_version || '1.0.0',
                 environment: process.env.NODE_ENV
