@@ -32,7 +32,7 @@ router.put('/:id',
 );
 
 router.post('/:id/cancel', 
-  // rateLimits.strict,
+  rateLimits.strict,
   uuidParam('id'),
   trainingController.cancelJob
 );
@@ -48,7 +48,7 @@ router.get('/:id/metrics',
 );
 
 router.post('/estimate-cost', 
-  // // rateLimits.general,
+  rateLimits.general,
   trainingController.estimateCost
 );
 

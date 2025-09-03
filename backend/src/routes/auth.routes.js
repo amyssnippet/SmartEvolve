@@ -33,7 +33,7 @@ router.put('/profile',
 
 router.post('/change-password', 
   authMiddleware,
-  // rateLimits.strict,
+  rateLimits.strict,
   authController.changePassword
 );
 

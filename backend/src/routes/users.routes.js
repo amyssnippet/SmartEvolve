@@ -10,17 +10,17 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/dashboard', 
-  // // rateLimits.general,
+  rateLimits.general,
   usersController.getDashboard
 );
 
 router.get('/settings', 
-  // // rateLimits.general,
+  rateLimits.general,
   usersController.getSettings
 );
 
 router.put('/settings', 
-  // // rateLimits.general,
+  rateLimits.general,
   usersController.updateSettings
 );
 
@@ -30,7 +30,7 @@ router.get('/activity',
 );
 
 router.delete('/account', 
-  // rateLimits.strict,
+  rateLimits.strict,
   usersController.deleteAccount
 );
 

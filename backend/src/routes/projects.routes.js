@@ -16,7 +16,7 @@ router.get('/',
 );
 
 router.post('/', 
-  // // rateLimits.general,
+  rateLimits.general,
   projectValidation.create,
   projectsController.createProject
 );
@@ -33,7 +33,7 @@ router.put('/:id',
 );
 
 router.delete('/:id', 
-  // rateLimits.strict,
+  rateLimits.strict,
   uuidParam('id'),
   projectsController.deleteProject
 );
