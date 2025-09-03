@@ -14,7 +14,7 @@ class ChecksumMiddleware {
     return new Promise((resolve, reject) => {
       const hash = crypto.createHash(algorithm);
       const stream = fs.createReadStream(filePath);
-      
+
       stream.on('data', data => hash.update(data));
       stream.on('end', () => resolve(hash.digest('hex')));
       stream.on('error', reject);
@@ -29,7 +29,7 @@ class ChecksumMiddleware {
 
   async calculateMultipleChecksums(filePath, algorithms = this.algorithms) {
     const checksums = {};
-    
+
     return new Promise((resolve, reject) => {
       const hashes = {};
       algorithms.forEach(alg => {
@@ -37,20 +37,20 @@ class ChecksumMiddleware {
       });
 
       const stream = fs.createReadStream(filePath);
-      
+
       stream.on('data', data => {
         algorithms.forEach(alg => {
           hashes[alg].update(data);
         });
       });
-      
+
       stream.on('end', () => {
         algorithms.forEach(alg => {
           checksums[alg] = hashes[alg].digest('hex');
         });
         resolve(checksums);
       });
-      
+
       stream.on('error', reject);
     });
   }
@@ -84,7 +84,7 @@ class ChecksumMiddleware {
       checksums,
       createdAt: new Date().toISOString()
     };
-    
+
     await fs.writeJSON(checksumPath, checksumData, { spaces: 2 });
   }
 
@@ -92,7 +92,7 @@ class ChecksumMiddleware {
     // Implementation would depend on your database structure
     // This is a placeholder for database storage
     const StorageFile = require('../../models/StorageFile');
-    
+
     try {
       await StorageFile.update(
         { checksum: checksums.sha256 }, // Store primary checksum
@@ -106,14 +106,14 @@ class ChecksumMiddleware {
   async storeMetadataChecksums(filePath, checksums) {
     const metadataPath = `${filePath}.meta`;
     let metadata = {};
-    
+
     if (await fs.pathExists(metadataPath)) {
       metadata = await fs.readJSON(metadataPath);
     }
-    
+
     metadata.checksums = checksums;
     metadata.checksumUpdatedAt = new Date().toISOString();
-    
+
     await fs.writeJSON(metadataPath, metadata, { spaces: 2 });
   }
 
@@ -137,41 +137,41 @@ class ChecksumMiddleware {
 
   async loadSidecarChecksums(filePath) {
     const checksumPath = `${filePath}.checksums`;
-    
+
     if (await fs.pathExists(checksumPath)) {
       const data = await fs.readJSON(checksumPath);
       return data.checksums;
     }
-    
+
     return null;
   }
 
   async loadDatabaseChecksums(filePath) {
     const StorageFile = require('../../models/StorageFile');
-    
+
     try {
       const file = await StorageFile.findOne({
         where: { file_path: filePath }
       });
-      
+
       if (file && file.checksum) {
         return { sha256: file.checksum };
       }
     } catch (error) {
       logger.error('Database checksum loading failed:', error);
     }
-    
+
     return null;
   }
 
   async loadMetadataChecksums(filePath) {
     const metadataPath = `${filePath}.meta`;
-    
+
     if (await fs.pathExists(metadataPath)) {
       const metadata = await fs.readJSON(metadataPath);
       return metadata.checksums || null;
     }
-    
+
     return null;
   }
 
@@ -180,7 +180,7 @@ class ChecksumMiddleware {
       if (!expectedChecksums) {
         expectedChecksums = await this.loadChecksums(filePath);
       }
-      
+
       if (!expectedChecksums) {
         return {
           verified: false,
@@ -190,10 +190,10 @@ class ChecksumMiddleware {
 
       const algorithms = Object.keys(expectedChecksums);
       const actualChecksums = await this.calculateMultipleChecksums(filePath, algorithms);
-      
+
       const results = {};
       let allMatch = true;
-      
+
       for (const algorithm of algorithms) {
         const matches = actualChecksums[algorithm] === expectedChecksums[algorithm];
         results[algorithm] = {
@@ -201,7 +201,7 @@ class ChecksumMiddleware {
           actual: actualChecksums[algorithm],
           matches
         };
-        
+
         if (!matches) {
           allMatch = false;
         }
@@ -233,9 +233,9 @@ class ChecksumMiddleware {
       if (this.updateOnWrite) {
         const checksums = await this.calculateMultipleChecksums(filePath, this.algorithms);
         await this.storeChecksums(filePath, checksums);
-        
+
         logger.debug(`Checksums calculated for ${filePath}:`, checksums);
-        
+
         return {
           filePath,
           checksums,
@@ -253,18 +253,18 @@ class ChecksumMiddleware {
   async handleFileRead(filePath) {
     try {
       const data = await fs.readFile(filePath);
-      
+
       if (this.verifyOnRead) {
         const verification = await this.verifyFile(filePath);
-        
+
         if (!verification.verified) {
           const error = new Error(`File integrity check failed: ${verification.reason}`);
           error.verification = verification;
           throw error;
         }
-        
+
         logger.debug(`File integrity verified for ${filePath}`);
-        
+
         return {
           data,
           verified: true,
@@ -282,19 +282,19 @@ class ChecksumMiddleware {
   async repairFile(filePath, backupSources = []) {
     try {
       logger.info(`Attempting to repair corrupted file: ${filePath}`);
-      
+
       // Try to find a valid backup
       for (const backupPath of backupSources) {
         if (await fs.pathExists(backupPath)) {
           const verification = await this.verifyFile(backupPath);
-          
+
           if (verification.verified) {
             // Copy backup to original location
             await fs.copy(backupPath, filePath);
-            
+
             // Verify the repair
             const repairVerification = await this.verifyFile(filePath);
-            
+
             if (repairVerification.verified) {
               logger.info(`File successfully repaired from backup: ${backupPath}`);
               return {
@@ -334,7 +334,7 @@ class ChecksumMiddleware {
       for (const filePath of files) {
         try {
           const storedChecksums = await this.loadChecksums(filePath);
-          
+
           if (!storedChecksums) {
             auditResults.missingChecksums++;
             auditResults.results.push({
@@ -345,7 +345,7 @@ class ChecksumMiddleware {
           }
 
           const verification = await this.verifyFile(filePath, storedChecksums);
-          
+
           if (verification.verified) {
             auditResults.verifiedFiles++;
             auditResults.results.push({
@@ -379,14 +379,14 @@ class ChecksumMiddleware {
 
   async getFilesRecursively(directoryPath) {
     const files = [];
-    
+
     async function traverse(currentPath) {
       const items = await fs.readdir(currentPath);
-      
+
       for (const item of items) {
         const itemPath = require('path').join(currentPath, item);
         const stats = await fs.stat(itemPath);
-        
+
         if (stats.isDirectory()) {
           await traverse(itemPath);
         } else if (stats.isFile() && !item.endsWith('.checksums') && !item.endsWith('.meta')) {
