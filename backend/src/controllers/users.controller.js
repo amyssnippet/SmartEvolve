@@ -9,49 +9,58 @@ class UsersController {
   getDashboard = asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
-    // Get user stats
-    const [projectsCount, activeJobsCount, completedJobsCount, totalCost] = await Promise.all([
-      Project.count({ where: { user_id: userId } }),
-      TrainingJob.count({ 
-        where: { 
-          user_id: userId, 
-          status: ['queued', 'provisioning', 'running'] 
-        } 
-      }),
-      TrainingJob.count({ 
-        where: { 
-          user_id: userId, 
-          status: 'completed' 
-        } 
-      }),
-      TrainingJob.sum('cost_incurred', { 
-        where: { user_id: userId } 
-      }) || 0
-    ]);
+    try {
+      // Get user stats (these work fine without associations)
+      const [projectsCount, activeJobsCount, completedJobsCount, totalCost] = await Promise.all([
+        Project.count({ where: { user_id: userId } }),
+        TrainingJob.count({ 
+          where: { 
+            user_id: userId, 
+            status: ['queued', 'provisioning', 'running'] 
+          } 
+        }),
+        TrainingJob.count({ 
+          where: { 
+            user_id: userId, 
+            status: 'completed' 
+          } 
+        }),
+        TrainingJob.sum('cost_incurred', { 
+          where: { user_id: userId } 
+        }) || 0
+      ]);
 
-    // Get recent activity
-    const recentJobs = await TrainingJob.findAll({
-      where: { user_id: userId },
-      limit: 5,
-      order: [['created_at', 'DESC']],
-      include: [
-        { model: Project, as: 'project', attributes: ['name'] }
-      ]
-    });
+      // Get recent activity with CORRECT association usage
+      const recentJobs = await TrainingJob.findAll({
+        where: { user_id: userId },
+        limit: 5,
+        order: [['created_at', 'DESC']],
+        include: [
+          { 
+            model: Project, 
+            as: 'project',  // This is the key - use the exact alias from associations
+            attributes: ['id', 'name'] 
+          }
+        ]
+      });
 
-    res.json({
-      success: true,
-      dashboard: {
-        stats: {
-          projectsCount,
-          activeJobsCount,
-          completedJobsCount,
-          totalCost: parseFloat(totalCost),
-          tokenBalance: req.user.token_balance
-        },
-        recentActivity: recentJobs
-      }
-    });
+      res.json({
+        success: true,
+        dashboard: {
+          stats: {
+            projectsCount,
+            activeJobsCount,
+            completedJobsCount,
+            totalCost: parseFloat(totalCost),
+            tokenBalance: req.user.token_balance
+          },
+          recentActivity: recentJobs
+        }
+      });
+    } catch (error) {
+      logger.error('Dashboard query failed:', error);
+      throw error;
+    }
   });
 
   // Get user settings
@@ -109,7 +118,7 @@ class UsersController {
       offset: parseInt(offset),
       order: [['created_at', 'DESC']],
       include: [
-        { model: Project, as: 'project', attributes: ['name'] }
+        { model: Project, as: 'project', attributes: ['id', 'name'] }
       ]
     });
 

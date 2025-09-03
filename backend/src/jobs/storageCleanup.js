@@ -1,5 +1,4 @@
 const storageService = require('../services/storageService');
-const { StorageConfig } = require('../config/storage');
 const cleanupHandler = require('../storage/handlers/cleanup.handler');
 const logger = require('../utils/logger');
 
