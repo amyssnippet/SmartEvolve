@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const logger = require('../utils/logger');
+const { setupAssociations } = require('../models/associations');
 
 let sequelize;
 
@@ -33,6 +34,9 @@ const initializeDatabase = async () => {
 
     // Import and initialize models AFTER sequelize is created
     await initializeModels();
+
+    await setupAssociations();
+    logger.info('Model associations set up successfully');
     
     // Auto sync
     await sequelize.sync({ alter: true });

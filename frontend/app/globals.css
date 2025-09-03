@@ -38,6 +38,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Safe area (navbar height) to keep the effect from rendering behind the navbar.
+     Adjust if your navbar is taller/shorter. */
+  --nav-safe-area: 64px;
 }
 
 .dark {
@@ -122,5 +125,59 @@
   }
   body {
     @apply bg-background text-foreground;
+    position: relative; /* ensure body creates a stacking context for the pseudo-element */
+    z-index: 0;
   }
+}
+
+/* Animate background for subtle vibrant motion */
+@keyframes auroraShift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(80px) saturate(1.05);
+  }
+  50% {
+    transform: translate3d(-2%, -1%, 0) scale(1.05);
+    filter: blur(85px) saturate(1.1);
+  }
+  100% {
+    transform: translate3d(2%, 1%, 0) scale(1.08);
+    filter: blur(90px) saturate(1.15);
+  }
+}
+
+/* The pseudo-element draws multiple soft radial gradients and animates them */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  /* Keep text readable; use two vibrant accents (blue, pink) plus neutrals */
+  background: radial-gradient(40% 35% at 20% 15%, rgba(37, 99, 235, 0.3), transparent 60%),
+    radial-gradient(35% 30% at 80% 25%, rgba(236, 72, 153, 0.28), transparent 60%),
+    radial-gradient(50% 45% at 50% 80%, rgba(37, 99, 235, 0.18), transparent 65%);
+  filter: blur(80px);
+  opacity: 0.6;
+  animation: auroraShift 18s ease-in-out infinite alternate;
+
+  /* Mask the top area so the navbar is unaffected */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--nav-safe-area),
+    black calc(var(--nav-safe-area) + 1px)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--nav-safe-area),
+    black calc(var(--nav-safe-area) + 1px)
+  );
+}
+
+/* Optional: stronger effect in dark mode without hurting contrast */
+.dark body::before {
+  opacity: 0.7;
+  filter: blur(90px);
 }

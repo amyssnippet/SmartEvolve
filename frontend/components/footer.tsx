@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ThemeToggle } from "./theme-toggle"
 import { Github, Linkedin, Twitter } from "lucide-react"
+import { Data } from "@/metadata"
 
 const links = [
   { href: "/about", label: "About" },
@@ -18,7 +19,7 @@ export function Footer() {
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-4">
             {links.map((l) => (
-              <Link key={l.href} href={l.href} className="text-sm text-muted-foreground hover:text-foreground">
+              <Link key={l.href} href={l.href} className="text-sm  hover:text-foreground">
                 {l.label}
               </Link>
             ))}
@@ -26,7 +27,7 @@ export function Footer() {
           <div className="flex items-center gap-3">
             <a
               aria-label="Twitter"
-              className="text-muted-foreground hover:text-foreground"
+              className=" hover:text-foreground"
               href="https://twitter.com"
               target="_blank"
               rel="noreferrer"
@@ -35,7 +36,7 @@ export function Footer() {
             </a>
             <a
               aria-label="GitHub"
-              className="text-muted-foreground hover:text-foreground"
+              className=" hover:text-foreground"
               href="https://github.com"
               target="_blank"
               rel="noreferrer"
@@ -44,7 +45,7 @@ export function Footer() {
             </a>
             <a
               aria-label="LinkedIn"
-              className="text-muted-foreground hover:text-foreground"
+              className=" hover:text-foreground"
               href="https://linkedin.com"
               target="_blank"
               rel="noreferrer"
@@ -54,8 +55,13 @@ export function Footer() {
             <ThemeToggle />
           </div>
         </div>
-        <div className="mt-6 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} AI Platform. All rights reserved.
+        <div className="mx-auto flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="mt-6 text-xs">
+            © {new Date().getFullYear()} {Data.title}. All rights reserved.
+          </div>
+          <div className="mt-6 text-xs">
+            {Data.description}
+          </div>
         </div>
       </div>
     </footer>

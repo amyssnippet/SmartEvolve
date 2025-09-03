@@ -14,14 +14,13 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Search, Menu } from "lucide-react"
+import { Data } from "@/metadata"
 
 const links = [
-  { href: "/", label: "Home" },
   { href: "/models", label: "Models" },
-  { href: "/autotrain", label: "AutoTrain" },
+  { href: "/smartevolve", label: "SmartEvolve" },
   { href: "/datasets", label: "Datasets" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/docs", label: "Docs" },
   { href: "/community", label: "Community" },
 ]
 
@@ -45,8 +44,7 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
           <Link href="/" className="font-semibold">
-            <span className="sr-only">AI Platform</span>
-            <span className="text-lg">AI Platform</span>
+            <span className="text-lg">{Data.title}</span>
           </Link>
           <nav className="hidden md:flex items-center gap-5">
             {links.map((l) => (
@@ -73,15 +71,8 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="hidden sm:inline-flex">
-                Docs
-              </Button>
-            </DropdownMenuTrigger>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
               <Avatar className="h-8 w-8 cursor-pointer">
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback>👋</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
