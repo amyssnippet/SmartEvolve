@@ -37,7 +37,7 @@ const initializeDatabase = async () => {
 
     await setupAssociations();
     logger.info('Model associations set up successfully');
-    
+
     // Auto sync
     await sequelize.sync({ alter: true });
     logger.info('Database synchronized');
@@ -61,7 +61,7 @@ const initializeModels = async () => {
   require('../models/BillingTransaction');
   require('../models/PaymentOrder');
   require('../models/UploadSession');
-  
+
   logger.info('All models initialized successfully');
 };
 

@@ -1,7 +1,7 @@
 const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+const { getSequelize } = require('../config/database');
 
-class Project extends Model {}
+class Project extends Model { }
 
 Project.init({
   id: {
@@ -49,7 +49,7 @@ Project.init({
     defaultValue: DataTypes.NOW
   }
 }, {
-  sequelize,
+  sequelize: getSequelize(),
   modelName: 'Project',
   tableName: 'projects',
   underscored: true
