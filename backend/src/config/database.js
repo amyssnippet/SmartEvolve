@@ -1,43 +1,39 @@
 const { Sequelize } = require('sequelize');
 const logger = require('../utils/logger');
-const { setupAssociations } = require('../models/associations');
 
-let sequelize;
+// Create sequelize instance at module level
+const sequelize = new Sequelize(
+  'smartevolve',        // database name
+  'postgres_se',        // username
+  '1234',              // password
+  {
+    host: 'localhost',
+    port: 5432,
+    dialect: 'postgres',
+    logging: (msg) => logger.debug(msg),
+    pool: {
+      max: 20,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+    dialectOptions: {
+      ssl: false,
+    },
+  }
+);
 
 const initializeDatabase = async () => {
   try {
-    // ✅ Direct connection without env vars
-    sequelize = new Sequelize(
-      'smartevolve',        // database name
-      'postgres_se',      // username
-      '1234',  // password
-      {
-        host: 'localhost',  // or your DB host/IP
-        port: 5432,         // default Postgres port
-        dialect: 'postgres',
-        logging: (msg) => logger.debug(msg), // always log with your logger
-        pool: {
-          max: 20,
-          min: 0,
-          acquire: 30000,
-          idle: 10000,
-        },
-        dialectOptions: {
-          // remove if you don’t need SSL
-          ssl: false,
-        },
-      }
-    );
-
     await sequelize.authenticate();
     logger.info('Database connection established successfully');
 
     // Import and initialize models AFTER sequelize is created
     await initializeModels();
 
+    // Setup associations AFTER models are loaded
     await setupAssociations();
-    logger.info('Model associations set up successfully');
-
+    
     // Auto sync
     await sequelize.sync({ alter: true });
     logger.info('Database synchronized');
@@ -61,19 +57,19 @@ const initializeModels = async () => {
   require('../models/BillingTransaction');
   require('../models/PaymentOrder');
   require('../models/UploadSession');
-
+  
   logger.info('All models initialized successfully');
 };
 
-const getSequelize = () => {
-  if (!sequelize) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
-  }
-  return sequelize;
+const setupAssociations = async () => {
+  const { setupAssociations } = require('../models/associations');
+  setupAssociations();
+  logger.info('Model associations established successfully');
 };
 
+// Export sequelize instance directly - this is the key fix!
 module.exports = {
-  sequelize,
+  sequelize,           // Direct export of the instance
   initializeDatabase,
-  getSequelize,
+  getSequelize: () => sequelize  // Keep for compatibility but not used
 };

@@ -1,7 +1,8 @@
 const { DataTypes, Model } = require('sequelize');
-const { getSequelize } = require('../config/database');
+// Import sequelize instance directly instead of getSequelize function
+const { sequelize } = require('../config/database');
 
-class Project extends Model { }
+class Project extends Model {}
 
 Project.init({
   id: {
@@ -49,13 +50,13 @@ Project.init({
     defaultValue: DataTypes.NOW
   }
 }, {
-  sequelize: getSequelize(),
+  sequelize,  // Use direct import instead of getSequelize()
   modelName: 'Project',
   tableName: 'projects',
   underscored: true
 });
 
-// Associations
+// Associations - keep as is
 Project.associate = (models) => {
   Project.belongsTo(models.User, {
     foreignKey: 'user_id',
