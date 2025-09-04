@@ -3,22 +3,30 @@ const path = require('path');
 const crypto = require('crypto');
 const mime = require('mime-types');
 const archiver = require('archiver');
+
 const { StorageConfig } = require('../config/storage');
 const { StorageFile, Dataset, Model, UploadSession } = require('../models');
 const fileUtils = require('../utils/fileUtils');
 const logger = require('../utils/logger');
 
 class StorageService {
+
   async uploadFile(userId, fileData, metadata = {}) {
     try {
       const { fileName, fileType, buffer, isPublic = false, projectId = null } = fileData;
 
-      // Ensure user directories exist
+      // CRITICAL FIX: Ensure user directories exist BEFORE attempting to save
       await StorageConfig.ensureUserDirectories(userId);
 
-      // Generate unique filename if already exists
+      // Generate safe filename
       const safeName = fileUtils.sanitizeFileName(fileName);
       const filePath = StorageConfig.buildFilePath(userId, fileType, safeName, isPublic);
+      
+      // Ensure the specific directory exists
+      const fileDirectory = path.dirname(filePath);
+      await fs.ensureDir(fileDirectory);
+      
+      // Generate unique filename if already exists
       const finalPath = await this.ensureUniqueFilename(filePath);
       
       // Calculate checksum
@@ -77,7 +85,7 @@ class StorageService {
       const tempDir = path.join(StorageConfig.STORAGE_PATHS.TEMP_UPLOADS, uploadId);
       
       await fs.ensureDir(tempDir);
-      
+
       const uploadSession = await UploadSession.create({
         id: uploadId,
         user_id: userId,
@@ -106,14 +114,13 @@ class StorageService {
 
       const chunkPath = path.join(uploadSession.temp_path, `chunk_${chunkIndex}`);
       await fs.writeFile(chunkPath, chunkBuffer);
-      
+
       // Update uploaded chunks count
       await uploadSession.increment('uploaded_chunks');
-
       const updatedSession = await uploadSession.reload();
-      
+
       logger.debug(`Chunk uploaded: ${chunkIndex + 1}/${uploadSession.total_chunks}`);
-      
+
       return {
         uploaded: updatedSession.uploaded_chunks,
         total: uploadSession.total_chunks,
@@ -138,17 +145,18 @@ class StorageService {
 
       // Ensure user directories
       await StorageConfig.ensureUserDirectories(userId);
-      
+
       // Generate final file path
       const safeName = fileUtils.sanitizeFileName(uploadSession.file_name);
       const tempFinalPath = StorageConfig.buildFilePath(userId, fileType, safeName, isPublic);
       const finalPath = await this.ensureUniqueFilename(tempFinalPath);
-      
+
       // Reassemble file
       const writeStream = fs.createWriteStream(finalPath);
       
       for (let i = 0; i < uploadSession.total_chunks; i++) {
         const chunkPath = path.join(uploadSession.temp_path, `chunk_${i}`);
+        
         if (!(await fs.pathExists(chunkPath))) {
           throw new Error(`Missing chunk ${i}`);
         }
@@ -158,23 +166,23 @@ class StorageService {
       }
       
       writeStream.end();
-      
+
       // Wait for write to complete
       await new Promise((resolve, reject) => {
         writeStream.on('finish', resolve);
         writeStream.on('error', reject);
       });
-      
+
       // Verify file size
       const stats = await fs.stat(finalPath);
       if (stats.size !== uploadSession.file_size) {
         await fs.remove(finalPath);
         throw new Error('File size mismatch after reassembly');
       }
-      
+
       // Calculate checksum
       const checksum = await fileUtils.calculateChecksum(finalPath);
-      
+
       // Create storage file record
       const storageFile = await StorageFile.create({
         user_id: userId,
@@ -195,7 +203,6 @@ class StorageService {
 
       logger.info(`Chunked upload completed: ${uploadSession.file_name}`);
       return storageFile;
-      
     } catch (error) {
       logger.error('Failed to complete chunked upload:', error);
       throw error;
@@ -276,12 +283,12 @@ class StorageService {
       if (!(await fs.pathExists(file.file_path))) {
         throw new Error('File not found on disk');
       }
-      
+
       // Increment download count
       await file.increment('download_count');
-      
+
       logger.info(`File download: ${file.file_name}`);
-      
+
       return {
         stream: fs.createReadStream(file.file_path),
         fileName: file.file_name,
@@ -324,7 +331,6 @@ class StorageService {
   async listUserFiles(userId, fileType = null, projectId = null) {
     try {
       const where = { user_id: userId };
-      
       if (fileType) where.file_type = fileType;
       if (projectId) where.project_id = projectId;
 
@@ -372,7 +378,7 @@ class StorageService {
 
       const archiveName = `archive_${Date.now()}.zip`;
       const archivePath = path.join(StorageConfig.STORAGE_PATHS.TEMP_UPLOADS, archiveName);
-      
+
       const filePaths = files.map(file => ({
         filePath: file.file_path,
         name: file.file_name

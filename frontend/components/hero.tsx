@@ -33,28 +33,11 @@ export function Hero() {
             "radial-gradient(600px 300px at 10% 20%, var(--c1), transparent 60%), radial-gradient(500px 250px at 90% 30%, var(--c2), transparent 60%)",
         }}
       />
-      <div className="relative mx-auto max-w-5xl px-6 sm:px-10 py-14 sm:py-20 text-center rounded-2xl bg-background/40 dark:bg-background/20 backdrop-blur-xl shadow-xl overflow-hidden">
+      <div className="relative mx-auto max-w-5xl px-6 sm:px-10 py-14 sm:py-20 text-center ">
         {/* Decorative animated glow clipped to the glass panel */}
-        <motion.div
+        <div
           aria-hidden
-          className="pointer-events-none absolute -inset-8 -z-10 blur-3xl"
-          style={{
-            background:
-              "radial-gradient(50% 40% at 20% 10%, var(--gc1), transparent 60%), radial-gradient(45% 35% at 85% 35%, var(--gc2), transparent 60%)",
-          }}
-          animate={{
-            ["--gc1" as any]: [
-              "rgba(56,189,248,0.35)", // cyan-400
-              "rgba(59,130,246,0.35)", // blue-500
-              "rgba(56,189,248,0.35)", // cyan-400
-            ],
-            ["--gc2" as any]: [
-              "rgba(236,72,153,0.28)", // pink-500
-              "rgba(217,70,239,0.28)", // fuchsia-500
-              "rgba(236,72,153,0.28)", // pink-500
-            ],
-          }}
-          transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+          className="pointer-events-none absolute inset-0 -z-10 backdrop-blur-xl bg-background/40 dark:bg-background/20"
         />
         <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
           Train, Fine-Tune, and Deploy LLMs with One Click

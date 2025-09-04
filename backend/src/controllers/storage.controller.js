@@ -6,6 +6,7 @@ const { asyncHandler } = require('../middleware/error.middleware');
 const logger = require('../utils/logger');
 
 class StorageController {
+
   // Upload file
   uploadFile = asyncHandler(async (req, res) => {
     if (!req.file) {
@@ -36,16 +37,36 @@ class StorageController {
 
       logger.info(`File uploaded: ${req.file.originalname} by ${req.user.email}`);
 
-      res.json({
+      res.status(201).json({
         success: true,
         message: 'File uploaded successfully',
         file: storageFile
       });
+
     } catch (error) {
-      logger.error('File upload failed:', error);
+      logger.error('File upload controller error:', error);
+      
+      // Provide specific error messages
+      if (error.code === 'ENOENT') {
+        return res.status(500).json({
+          success: false,
+          error: 'Storage directory not found. Please contact support.',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+      }
+
+      if (error.code === 'EACCES') {
+        return res.status(500).json({
+          success: false,
+          error: 'Permission denied. Cannot write to storage directory.',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+      }
+
       res.status(500).json({
         success: false,
-        error: error.message
+        error: 'File upload failed',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   });
@@ -78,7 +99,7 @@ class StorageController {
   // Upload chunk
   uploadChunk = asyncHandler(async (req, res) => {
     const { uploadId, chunkIndex } = req.params;
-
+    
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -345,7 +366,6 @@ class StorageController {
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-
     if (isPublic === 'true') {
       whereClause.is_public = true;
     } else {
@@ -379,7 +399,6 @@ class StorageController {
     const offset = (page - 1) * limit;
 
     const whereClause = {};
-
     if (isPublic === 'true') {
       whereClause.is_public = true;
     } else {

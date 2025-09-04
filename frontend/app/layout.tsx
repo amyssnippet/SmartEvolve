@@ -38,7 +38,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground">
         <div
           aria-hidden
-          className="pointer-events-none fixed left-0 right-0 bottom-0 supports-[backdrop-filter]:backdrop-blur-xl backdrop-blur bg-background/40 dark:bg-background/20"
+          className="pointer-events-none fixed left-0 right-0 bottom-0 backdrop-blur-xl bg-background/40 dark:bg-background/20 overflow-hidden"
           style={{ top: "var(--nav-safe-area, 64px)", zIndex: -1 }}
         />
         <Suspense fallback={null}>

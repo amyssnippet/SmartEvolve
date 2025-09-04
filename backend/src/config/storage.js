@@ -20,10 +20,10 @@ class StorageConfig {
       await fs.ensureDir(STORAGE_PATHS.OPEN_SOURCE_DATASETS);
       await fs.ensureDir(STORAGE_PATHS.USERS_ROOT);
       await fs.ensureDir(STORAGE_PATHS.TEMP_UPLOADS);
-      
+
       // Create logs directory
       await fs.ensureDir(path.join(__dirname, '../../logs'));
-      
+
       logger.info('Storage directories initialized');
       return true;
     } catch (error) {
@@ -35,25 +35,34 @@ class StorageConfig {
   static getUserStoragePath(userId, type = null) {
     const userPath = path.join(STORAGE_PATHS.USERS_ROOT, userId);
     if (!type) return userPath;
-    return path.join(userPath, type); // 'models' or 'datasets'
+    return path.join(userPath, type); // 'models', 'datasets', etc.
   }
 
   static getOpenSourcePath(type) {
-    return type === 'models' 
-      ? STORAGE_PATHS.OPEN_SOURCE_MODELS 
+    return type === 'models'
+      ? STORAGE_PATHS.OPEN_SOURCE_MODELS
       : STORAGE_PATHS.OPEN_SOURCE_DATASETS;
   }
 
   static async ensureUserDirectories(userId) {
-    const userRoot = this.getUserStoragePath(userId);
-    const modelsPath = this.getUserStoragePath(userId, 'models');
-    const datasetsPath = this.getUserStoragePath(userId, 'datasets');
-    
-    await fs.ensureDir(userRoot);
-    await fs.ensureDir(modelsPath);
-    await fs.ensureDir(datasetsPath);
-    
-    return { userRoot, modelsPath, datasetsPath };
+    try {
+      const userRoot = this.getUserStoragePath(userId);
+      const modelsPath = this.getUserStoragePath(userId, 'model');
+      const datasetsPath = this.getUserStoragePath(userId, 'dataset');
+      const tempPath = this.getUserStoragePath(userId, 'temp');
+
+      await fs.ensureDir(userRoot);
+      await fs.ensureDir(modelsPath);
+      await fs.ensureDir(datasetsPath);
+      await fs.ensureDir(tempPath);
+
+      logger.debug(`User directories ensured for: ${userId}`);
+
+      return { userRoot, modelsPath, datasetsPath, tempPath };
+    } catch (error) {
+      logger.error(`Failed to ensure user directories for ${userId}:`, error);
+      throw error;
+    }
   }
 
   static buildFilePath(userId, fileType, fileName, isPublic = false) {
@@ -75,6 +84,9 @@ class StorageConfig {
     };
   }
 }
+
+// Export STORAGE_PATHS for backward compatibility
+StorageConfig.STORAGE_PATHS = STORAGE_PATHS;
 
 module.exports = {
   StorageConfig,
